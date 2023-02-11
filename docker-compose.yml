@@ -1,0 +1,65 @@
+version: '3.8'
+services:
+  server-crm:
+    build:
+      context: ./server-crm
+      dockerfile: Dockerfile
+    image: server-crm-img
+    container_name: server-crm
+ 
+    volumes:
+      - /app/node_modules
+      - ./server-crm/:/app
+    ports:
+      - "4005:4000"
+    depends_on:
+      - mongo-crm
+    env_file: ./server-crm/.env
+    environment:
+      - NODE_ENV=development
+    networks:
+      - crm-network
+
+  mongo-crm:
+    image: mongo
+    volumes:
+      -  mongo-crm-data-volume:/data/db
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
+    restart: on-failure
+
+    networks:
+      - crm-network
+
+  client-crm:
+    build:
+      context: ./client-crm
+      dockerfile: Dockerfile
+    image: myapp-client-crm
+    container_name: myapp-next-client-crm
+    volumes:
+      - /app/node_modules
+      - ./client-crm/:/app
+    depends_on:
+      - server-crm
+    ports:
+      - "3005:3000"
+    networks:
+      - crm-network
+    stdin_open: true
+    tty: true
+
+
+
+networks:
+    crm-network:
+        driver: bridge
+
+volumes:
+    mongo-crm-data-volume:
+    node_modules:
+    web-root:
+      driver: local
